@@ -230,6 +230,8 @@ class Global_network(nn.Module):
         self.transformer = Transformer_cascade(128, 16 * 32, depth=6, num_heads=4)
 
     def forward(self, rgb):
+        import ipdb
+        # ipdb.set_trace()
         bs, c, erp_h, erp_w = rgb.shape
         conv1 = self.relu(self.bn1(self.conv1(rgb)))
         pool = F.max_pool2d(conv1, kernel_size=3, stride=2, padding=1)
@@ -242,6 +244,7 @@ class Global_network(nn.Module):
         layer4_reshape = self.down(layer4)
 
         layer4_reshape = layer4_reshape.permute(0, 2, 3, 1).reshape(bs, 16 * 32, -1)
+        
         layer4_reshape = self.transformer(layer4_reshape)
 
         layer4_reshape = layer4_reshape.permute(0, 2, 1).reshape(bs, -1, 16, 32)
@@ -423,10 +426,13 @@ class hrdfuse(nn.Module):
 
         self.w1 = nn.Parameter(torch.from_numpy(np.array([0.1,0.9])))
     def cal_sim(self, tangent_feature_set, feature_erp, erp_h, erp_w):
+        import ipdb
+        # ipdb.set_trace()
         feature_erp = F.interpolate(feature_erp, (erp_h, erp_w), mode='bilinear')
 
         bs, c, _, _, N = tangent_feature_set.shape
-        tangent_feature = tangent_feature_set.reshape(bs, c, N).permute(0, 2, 1)
+        tangent_feature = tangent_feature_set.reshape(bs, -1, N)[:,:c,:].permute(0, 2, 1)
+        # tangent_feature = tangent_feature_set.reshape(bs, -1, N).permute(0, 2, 1)
         tangent_feature_normed = torch.norm(tangent_feature, p=2, dim=-1).unsqueeze(-1).unsqueeze(-1)
 
         erp_feature_normed = torch.norm(feature_erp, p=2, dim=1).unsqueeze(1)

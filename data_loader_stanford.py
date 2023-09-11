@@ -60,13 +60,25 @@ class Dataset(torch.utils.data.Dataset):
         # Load the panos
         relative_basename = osp.splitext((relative_paths[0]))[0]
         basename = osp.splitext(osp.basename(relative_paths[0]))[0]
+        import ipdb
+        # ipdb.set_trace()
+        print('======================',self.image_list[idx])
+        try:
+            rgb_name = os.path.join(self.root_path, self.image_list[idx][0])
+            rgb = cv2.imread(rgb_name)
+            rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
+            temp = self.image_list[idx][1].split('/depth/')[1]
+            depth_name = os.path.join(self.root_path,'area_2/pano/depth',temp)
+            depth = cv2.imread(depth_name, -1)
+        except:
+            print(rgb_name)
+            rgb = np.random.rand(2048, 4096, 3)
+            depth = np.random.rand(2048, 4096)
 
-        rgb_name = os.path.join(self.root_dir, self.image_list[idx][0])
-        rgb = cv2.imread(rgb_name)
-        rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
-        temp = self.image_list[idx][1].split('/depth/')[1]
-        depth_name = os.path.join(self.root_dir,'area_2/pano/depth',temp)
-        depth = cv2.imread(depth_name, -1)
+        # if(type(depth) == None):
+        print(rgb_name)
+        rgb = np.random.rand(512, 1024, 3)
+        depth = np.random.rand(512,1024)
 
         rgb = rgb.astype(np.float32) / 255
 

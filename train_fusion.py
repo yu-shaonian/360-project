@@ -2,7 +2,6 @@ from __future__ import print_function
 # -*- coding: utf-8 -*-
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
-
 import sys
 # sys.path.append('/home/lgj/research/month_project/HRDFuse')
 import argparse
@@ -39,11 +38,11 @@ import csv
 from util import *
 import shutil
 import torchvision.utils as vutils
-from pytorch3d.loss import chamfer_distance
+# from pytorch3d.loss import chamfer_distance
 from torch.nn.utils.rnn import pad_sequence
 
 parser = argparse.ArgumentParser(description='360Transformer')
-parser.add_argument('--input_dir', default='/data/lgj/360/dataset360/standford.new/',
+parser.add_argument('--input_dir', default='/home/lgj/lgj/360/dataset360/standford.new/',
                     # parser.add_argument('--input_dir', default='/home/rtx2/NeurIPS/spherical_mvs/data/omnidepth',
                     # parser.add_argument('--input_dir', default='/media/rtx2/DATA/Structured3D/',
                     help='input data directory')
@@ -122,7 +121,7 @@ train_file_list = args.trainfile
 val_file_list = args.valfile  # File with list of validation files
 # ------------------------------------
 # -------------------------------------------------------------------
-batch_size = args.batch
+batch_size = 2
 visualize_interval = args.visualize_interval
 init_lr = args.lr
 fov = (args.fov, args.fov)  # (48, 48)
@@ -157,6 +156,7 @@ val_dataloader = torch.utils.data.DataLoader(
 # first network, coarse depth estimation
 # option 1, resnet 360
 num_gpu = torch.cuda.device_count()
+import ipdb
 network = hrdfuse(nrows=nrows, npatches=npatches_dict[nrows], patch_size=patch_size, fov=fov, min_val=min_val, max_val=max_val)
 # network = convert_model(network)
 
@@ -349,6 +349,8 @@ def main():
         total_image_loss = 0
         # -------------------------------
         network.train()
+        import ipdb
+        # ipdb.set_trace()
         # Train --------------------------------------------------------------------------------------------------
         for batch_idx, (rgb, depth, mask) in tqdm(enumerate(train_dataloader)):
             optimizer.zero_grad()
@@ -368,8 +370,9 @@ def main():
             l1_loss=nn.L1Loss()
             depth_loss = smooth_l1_loss(equi_depth_outputs, depth, mask=mask.to(torch.bool))
 
-            l_chamfer = bin_loss(bin_erp_edges, depth)
-            loss = depth_loss + 0.1 * l_chamfer
+            # l_chamfer = bin_loss(bin_erp_edges, depth)
+            # loss = depth_loss + 0.1 * l_chamfer
+            loss = depth_loss 
 
             rgb_img = rgb.detach().cpu().numpy()
             depth_prediction = equi_depth_outputs.detach().cpu().numpy()
@@ -426,7 +429,7 @@ def main():
 
             total_train_loss += loss.item()
             total_depth_loss += depth_loss.item()
-            total_chamfer_loss += l_chamfer.item()
+            # total_chamfer_loss += l_chamfer.item()
 
             global_step += 1
             if batch_idx % visualize_interval == 0 and batch_idx > 0:

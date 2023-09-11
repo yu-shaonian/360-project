@@ -1,5 +1,7 @@
 ckpt
+*.tar
 .idea
 build
 *.pt
 __pycache__
+result
